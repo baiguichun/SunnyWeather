@@ -1,16 +1,42 @@
 [versions]
 agp = "8.4.1"
+androidxLifecycleLifecycleExtensions15 = "2.2.0"
+comGeyifengImmersionbarImmersionbar3 = "3.2.2"
+comGoogleAndroidMaterialMaterial11 = "1.1.0"
+comSquareupRetrofit2Retrofit6 = "2.6.1"
+comSquareupRetrofit2ConverterGson3 = "2.6.1"
 kotlin = "1.9.0"
 coreKtx = "1.10.1"
 junit = "4.13.2"
 junitVersion = "1.1.5"
 espressoCore = "3.5.1"
+kotlinxCoroutinesCore = "1.3.0"
+kotlinxCoroutinesAndroid = "1.6.4"
+lifecycleLivedataKtx = "2.6.1"
+lifecycleLivedataKtxVersion = "2.4.1"
 lifecycleRuntimeKtx = "2.6.1"
 activityCompose = "1.8.0"
 composeBom = "2023.08.00"
+appcompat = "1.6.1"
+material = "1.10.0"
+activity = "1.8.0"
+constraintlayout = "2.1.4"
+recyclerview = "1.3.0"
+swiperefreshlayout = "1.1.0"
+xxpermissions = "18.63"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+androidx-lifecycle-livedata-ktx = { module = "androidx.lifecycle:lifecycle-livedata-ktx", version.ref = "lifecycleLivedataKtx" }
+androidx-lifecycle-livedata-ktx-v241 = { module = "androidx.lifecycle:lifecycle-livedata-ktx", version.ref = "lifecycleLivedataKtxVersion" }
+androidx-swiperefreshlayout = { module = "androidx.swiperefreshlayout:swiperefreshlayout", version.ref = "swiperefreshlayout" }
+androidx-recyclerview = { module = "androidx.recyclerview:recyclerview", version.ref = "recyclerview" }
+com-geyifeng-immersionbar-immersionbar4 = { module = "com.geyifeng.immersionbar:immersionbar", version.ref = "comGeyifengImmersionbarImmersionbar3" }
+com-squareup-retrofit2-converter-gson4 = { module = "com.squareup.retrofit2:converter-gson", version.ref = "comSquareupRetrofit2ConverterGson3" }
+com-squareup-retrofit2-retrofit7 = { module = "com.squareup.retrofit2:retrofit", version.ref = "comSquareupRetrofit2Retrofit6" }
+com-google-android-material-material-v110-x12 = { module = "com.google.android.material:material", version.ref = "comGoogleAndroidMaterialMaterial11" }
+androidx-lifecycle-lifecycle-extensions17 = { module = "androidx.lifecycle:lifecycle-extensions", version.ref = "androidxLifecycleLifecycleExtensions15" }
+immersionbar-ktx = { module = "com.geyifeng.immersionbar:immersionbar-ktx", version.ref = "comGeyifengImmersionbarImmersionbar3" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
@@ -24,6 +50,13 @@ androidx-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-toolin
 androidx-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
 androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
+androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
+kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "kotlinxCoroutinesAndroid" }
+kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinxCoroutinesCore" }
+material = { group = "com.google.android.material", name = "material", version.ref = "material" }
+androidx-activity = { group = "androidx.activity", name = "activity", version.ref = "activity" }
+androidx-constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
+xxpermissions = { module = "com.github.getActivity:XXPermissions", version.ref = "xxpermissions" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
