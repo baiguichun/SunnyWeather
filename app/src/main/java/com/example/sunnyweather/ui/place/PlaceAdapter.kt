@@ -1,6 +1,5 @@
 package com.example.sunnyweather.ui.place
 
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -24,17 +23,24 @@ class PlaceAdapter(private val fragment: PlaceFragment, private val placeList: L
         holder.itemView.setOnClickListener {
             val position = holder.adapterPosition
             val place = placeList[position]
-            val curActivity = fragment.activity
-            if (curActivity != null) {
-                Log.d("sharedPreferences", "点击")
-                fragment.viewModel.savePlace(place)
-                WeatherActivity.start(
-                    curActivity,
-                    place.location.lng,
-                    place.location.lat,
-                    place.name
-                )
-                curActivity.finish()
+            fragment.viewModel.savePlace(place)
+            val activity = fragment.activity
+            if (activity is WeatherActivity) {
+                activity.closeDrawers()
+                activity.viewModel.locationLng = place.location.lng
+                activity.viewModel.locationLat = place.location.lat
+                activity.viewModel.placeName = place.name
+                activity.refreshWeather()
+            } else {
+                if (activity != null) {
+                    WeatherActivity.start(
+                        activity,
+                        place.location.lng,
+                        place.location.lat,
+                        place.name
+                    )
+                    activity.finish()
+                }
             }
         }
         return holder

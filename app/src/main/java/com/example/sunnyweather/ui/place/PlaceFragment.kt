@@ -9,6 +9,7 @@ import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.sunnyweather.MainActivity
 import com.example.sunnyweather.databinding.FragmentPlaceBinding
 import com.example.sunnyweather.ui.weather.WeatherActivity
 
@@ -29,18 +30,15 @@ class PlaceFragment : Fragment() {
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-        if (viewModel.isPlaceSaved()) {
+        if (activity is MainActivity && viewModel.isPlaceSaved()) {
             val place = viewModel.getSavedPlace()
-            val curActivity = activity
-            if (curActivity != null) {
-                WeatherActivity.start(
-                    curActivity,
-                    place.location.lng,
-                    place.location.lat,
-                    place.name
-                )
-                curActivity.finish()
-            }
+            WeatherActivity.start(
+                activity as MainActivity,
+                place.location.lng,
+                place.location.lat,
+                place.name
+            )
+            activity?.finish()
             return
         }
         val layoutManager = LinearLayoutManager(activity)
