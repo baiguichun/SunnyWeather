@@ -82,4 +82,6 @@ dependencies {
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.xxpermissions)
+    implementation(libs.com.geyifeng.immersionbar.immersionbar4)
+    implementation(libs.immersionbar.ktx)
 }

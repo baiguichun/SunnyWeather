@@ -10,9 +10,10 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.sunnyweather.databinding.FragmentPlaceBinding
+import com.example.sunnyweather.ui.weather.WeatherActivity
 
 class PlaceFragment : Fragment() {
-    private val viewModel by lazy { ViewModelProvider(this)[PlaceViewModel::class.java] }
+    val viewModel by lazy { ViewModelProvider(this)[PlaceViewModel::class.java] }
     private lateinit var adapter: PlaceAdapter
     private var _binding: FragmentPlaceBinding? = null
     private val binding get() = _binding!!
@@ -28,31 +29,45 @@ class PlaceFragment : Fragment() {
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
+        if (viewModel.isPlaceSaved()) {
+            val place = viewModel.getSavedPlace()
+            val curActivity = activity
+            if (curActivity != null) {
+                WeatherActivity.start(
+                    curActivity,
+                    place.location.lng,
+                    place.location.lat,
+                    place.name
+                )
+                curActivity.finish()
+            }
+            return
+        }
         val layoutManager = LinearLayoutManager(activity)
-        binding.recyclerView.layoutManager=layoutManager
-        adapter=PlaceAdapter(this,viewModel.placeList)
-        binding.recyclerView.adapter=adapter
+        binding.recyclerView.layoutManager = layoutManager
+        adapter = PlaceAdapter(this, viewModel.placeList)
+        binding.recyclerView.adapter = adapter
         binding.searchPlaceEdit.addTextChangedListener {
-            val content=it.toString()
-            if (content.isNotEmpty()){
+            val content = it.toString()
+            if (content.isNotEmpty()) {
                 viewModel.searchPlaces(content)
-            }else{
-                binding.recyclerView.visibility=View.GONE
-                binding.bgImageView.visibility=View.VISIBLE
+            } else {
+                binding.recyclerView.visibility = View.GONE
+                binding.bgImageView.visibility = View.VISIBLE
                 viewModel.placeList.clear()
                 adapter.notifyDataSetChanged()
             }
         }
-        viewModel.placeLiveData.observe(viewLifecycleOwner){
-            val places=it.getOrNull()
-            if (places!=null){
-                binding.recyclerView.visibility=View.VISIBLE
-                binding.bgImageView.visibility=View.GONE
+        viewModel.placeLiveData.observe(viewLifecycleOwner) {
+            val places = it.getOrNull()
+            if (places != null) {
+                binding.recyclerView.visibility = View.VISIBLE
+                binding.bgImageView.visibility = View.GONE
                 viewModel.placeList.clear()
                 viewModel.placeList.addAll(places)
                 adapter.notifyDataSetChanged()
-            }else{
-                Toast.makeText(activity,"未能查询到任何地点",Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(activity, "未能查询到任何地点", Toast.LENGTH_SHORT).show()
                 it.exceptionOrNull()?.printStackTrace()
             }
         }
@@ -63,6 +78,6 @@ class PlaceFragment : Fragment() {
 
     override fun onDestroy() {
         super.onDestroy()
-        _binding=null
+        _binding = null
     }
 }
