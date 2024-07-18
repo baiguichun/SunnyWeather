@@ -12,8 +12,8 @@ class WeatherViewModel : ViewModel() {
     var locationLat = ""
     var placeName = ""
 
-    val weatherLiveData = locationLiveData.switchMap { loacation ->
-        Repository.refreshWeather(loacation.lng, loacation.lat)
+    val weatherLiveData = locationLiveData.switchMap { location ->
+        Repository.refreshWeather(location.lng, location.lat)
     }
 
     fun refreshWeather(lng: String, lat: String) {

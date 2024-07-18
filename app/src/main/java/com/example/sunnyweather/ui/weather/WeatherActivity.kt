@@ -14,6 +14,7 @@ import androidx.drawerlayout.widget.DrawerLayout
 import androidx.lifecycle.ViewModelProvider
 import com.example.sunnyweather.R
 import com.example.sunnyweather.databinding.ActivityWeatherBinding
+import com.example.sunnyweather.logic.model.Place
 import com.example.sunnyweather.logic.model.Weather
 import com.example.sunnyweather.logic.model.getSky
 import com.gyf.immersionbar.ImmersionBar
@@ -35,7 +36,7 @@ class WeatherActivity : AppCompatActivity() {
         }
     }
 
-    val viewModel by lazy { ViewModelProvider(this)[WeatherViewModel::class.java] }
+    private val viewModel by lazy { ViewModelProvider(this)[WeatherViewModel::class.java] }
     private var longitude: String? = null
     private var latitude: String? = null
     private var placeName: String? = null
@@ -174,5 +175,10 @@ class WeatherActivity : AppCompatActivity() {
         binding.drawerLayout.closeDrawers()
     }
 
+    fun setPlace(place: Place) {
+        viewModel.locationLng = place.location.lng
+        viewModel.locationLat = place.location.lat
+        viewModel.placeName = place.name
+    }
 
 }

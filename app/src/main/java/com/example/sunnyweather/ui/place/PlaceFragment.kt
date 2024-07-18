@@ -11,10 +11,11 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.sunnyweather.MainActivity
 import com.example.sunnyweather.databinding.FragmentPlaceBinding
+import com.example.sunnyweather.logic.model.Place
 import com.example.sunnyweather.ui.weather.WeatherActivity
 
 class PlaceFragment : Fragment() {
-    val viewModel by lazy { ViewModelProvider(this)[PlaceViewModel::class.java] }
+    private val viewModel by lazy { ViewModelProvider(this)[PlaceViewModel::class.java] }
     private lateinit var adapter: PlaceAdapter
     private var _binding: FragmentPlaceBinding? = null
     private val binding get() = _binding!!
@@ -77,5 +78,9 @@ class PlaceFragment : Fragment() {
     override fun onDestroy() {
         super.onDestroy()
         _binding = null
+    }
+
+    fun savePlace(place: Place) {
+        viewModel.savePlace(place)
     }
 }
