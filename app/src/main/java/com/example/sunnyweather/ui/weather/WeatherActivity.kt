@@ -114,13 +114,11 @@ class WeatherActivity : AppCompatActivity() {
     }
 
     private fun registerObserver() {
-        viewModel.weatherLiveData.observe(this) { result ->
-            val weather = result.getOrNull()
+        viewModel.weatherInfo.observe(this) { weather ->
             if (weather != null) {
                 showWeatherInfo(weather)
             } else {
                 Toast.makeText(this, "无法成功获取天气信息", Toast.LENGTH_SHORT).show()
-                result.exceptionOrNull()?.printStackTrace()
             }
             binding.swipeRefresh.isRefreshing = false
         }

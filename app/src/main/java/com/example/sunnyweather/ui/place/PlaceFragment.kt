@@ -24,8 +24,9 @@ class PlaceFragment : Fragment() {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         _binding = FragmentPlaceBinding.inflate(inflater, container, false)
+        registerObservers()
         return binding.root
     }
 
@@ -44,7 +45,7 @@ class PlaceFragment : Fragment() {
         }
         val layoutManager = LinearLayoutManager(activity)
         binding.recyclerView.layoutManager = layoutManager
-        adapter = PlaceAdapter(this, viewModel.placeList)
+        adapter = PlaceAdapter(this)
         binding.recyclerView.adapter = adapter
         binding.searchPlaceEdit.addTextChangedListener {
             val content = it.toString()
@@ -53,25 +54,21 @@ class PlaceFragment : Fragment() {
             } else {
                 binding.recyclerView.visibility = View.GONE
                 binding.bgImageView.visibility = View.VISIBLE
-                viewModel.placeList.clear()
-                adapter.notifyDataSetChanged()
+                adapter.updateData(null)
             }
         }
-        viewModel.placeLiveData.observe(viewLifecycleOwner) {
-            val places = it.getOrNull()
-            if (places != null) {
+    }
+
+    private fun registerObservers() {
+        viewModel.placeList.observe(viewLifecycleOwner) { places ->
+            if (places != null && places.isNotEmpty()) {
                 binding.recyclerView.visibility = View.VISIBLE
                 binding.bgImageView.visibility = View.GONE
-                viewModel.placeList.clear()
-                viewModel.placeList.addAll(places)
-                adapter.notifyDataSetChanged()
+                adapter.updateData(places)
             } else {
                 Toast.makeText(activity, "未能查询到任何地点", Toast.LENGTH_SHORT).show()
-                it.exceptionOrNull()?.printStackTrace()
             }
         }
-
-
     }
 
 

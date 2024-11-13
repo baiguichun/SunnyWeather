@@ -9,8 +9,10 @@ import com.example.sunnyweather.R
 import com.example.sunnyweather.logic.model.Place
 import com.example.sunnyweather.ui.weather.WeatherActivity
 
-class PlaceAdapter(private val fragment: PlaceFragment, private val placeList: List<Place>) :
+class PlaceAdapter(private val fragment: PlaceFragment) :
     RecyclerView.Adapter<PlaceAdapter.ViewHolder>() {
+
+    private var placeList: ArrayList<Place> = ArrayList()
 
     inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val placeName: TextView = view.findViewById<TextView>(R.id.placeName)
@@ -52,5 +54,13 @@ class PlaceAdapter(private val fragment: PlaceFragment, private val placeList: L
         val place = placeList[position]
         holder.placeName.text = place.name
         holder.placeAddress.text = place.address
+    }
+
+    fun updateData(places: List<Place>?) {
+        placeList.clear()
+        if (places != null) {
+            placeList.addAll(places)
+        }
+        notifyDataSetChanged()
     }
 }

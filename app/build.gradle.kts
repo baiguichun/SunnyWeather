@@ -81,7 +81,6 @@ dependencies {
     implementation(libs.com.squareup.retrofit2.converter.gson4)
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.coroutines.android)
-    implementation(libs.xxpermissions)
     implementation(libs.com.geyifeng.immersionbar.immersionbar4)
-    implementation(libs.immersionbar.ktx)
+    debugImplementation(libs.leakcanary.android)
 }
