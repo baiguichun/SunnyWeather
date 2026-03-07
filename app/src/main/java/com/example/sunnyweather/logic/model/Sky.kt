@@ -47,9 +47,11 @@ private val sky = mapOf(
     "DUST" to Sky("浮尘", R.drawable.ic_fog, R.drawable.bg_fog)
 )
 
+private val defaultSky = Sky("晴", R.drawable.ic_clear_day, R.drawable.bg_clear_day)
+
 /**
  * 根据天气代码获取展示资源，未知代码回退到晴天。
  */
 fun getSky(skycon: String): Sky {
-    return sky[skycon] ?: sky["CLEAR_DAY"]!!
+    return sky[skycon] ?: defaultSky
 }

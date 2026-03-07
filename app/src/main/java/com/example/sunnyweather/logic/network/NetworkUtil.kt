@@ -32,9 +32,10 @@ suspend fun <T> filterResponse(call: suspend () -> Response<T>): ApiResult<T> {
     try {
         val response = call()
         return if (response.isSuccessful) {
-            if (response.body() != null) {
+            val body = response.body()
+            if (body != null) {
                 Log.i("SunnyWeather", "网络请求成功")
-                ApiResult.Success(response.body()!!)
+                ApiResult.Success(body)
             } else {
                 val msg = "网络请求失败，code：-1000，msg：response body is null"
                 Log.i("SunnyWeather", msg)
