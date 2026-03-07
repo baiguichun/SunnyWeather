@@ -13,9 +13,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
@@ -57,6 +57,9 @@ import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Locale
 
+/**
+ * 天气页面路由层：绑定 ViewModel 状态、抽屉交互和下拉刷新。
+ */
 @OptIn(ExperimentalMaterialApi::class, ExperimentalComposeUiApi::class)
 @Composable
 fun WeatherRoute(
@@ -149,6 +152,9 @@ fun WeatherRoute(
     }
 }
 
+/**
+ * 天气页面滚动内容。
+ */
 @Composable
 private fun WeatherScreen(
     weather: Weather,
@@ -170,6 +176,9 @@ private fun WeatherScreen(
     }
 }
 
+/**
+ * 实时天气头部区域。
+ */
 @Composable
 private fun NowSection(
     weather: Weather,
@@ -262,6 +271,9 @@ private fun NowSection(
     }
 }
 
+/**
+ * 未来天气预报区域。
+ */
 @Composable
 private fun ForecastSection(daily: DailyResponse.Daily) {
     val formatter = remember { SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()) }
@@ -313,6 +325,9 @@ private fun ForecastSection(daily: DailyResponse.Daily) {
     }
 }
 
+/**
+ * 生活指数区域。
+ */
 @Composable
 private fun LifeIndexSection(lifeIndex: DailyResponse.LifeIndex) {
     Card(
@@ -370,6 +385,9 @@ private fun LifeIndexSection(lifeIndex: DailyResponse.LifeIndex) {
     }
 }
 
+/**
+ * 单项生活指数展示。
+ */
 @Composable
 private fun LifeIndexItem(
     iconRes: Int,

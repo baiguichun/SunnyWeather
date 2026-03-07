@@ -8,9 +8,19 @@ import com.example.sunnyweather.ui.place.PlaceSearchRoute
 import com.example.sunnyweather.ui.place.PlaceViewModel
 import com.example.sunnyweather.ui.weather.WeatherActivity
 
+/**
+ * 应用主页面，承载地点搜索入口。
+ */
 class MainActivity : ComponentActivity() {
+
+    /**
+     * 地点搜索与缓存状态管理。
+     */
     private val placeViewModel: PlaceViewModel by viewModels()
 
+    /**
+     * 初始化页面；若存在已缓存地点则直接跳转天气页。
+     */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         if (placeViewModel.isPlaceSaved()) {

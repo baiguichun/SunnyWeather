@@ -1,5 +1,6 @@
 package com.example.sunnyweather.ui.place
 
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -29,11 +30,13 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import android.widget.Toast
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.sunnyweather.R
 import com.example.sunnyweather.logic.model.Place
 
+/**
+ * 地点搜索路由层：绑定 ViewModel 状态与事件。
+ */
 @Composable
 fun PlaceSearchRoute(
     viewModel: PlaceViewModel,
@@ -59,6 +62,9 @@ fun PlaceSearchRoute(
     )
 }
 
+/**
+ * 地点搜索页面主体。
+ */
 @Composable
 fun PlaceSearchScreen(
     query: String,
@@ -125,6 +131,9 @@ fun PlaceSearchScreen(
     }
 }
 
+/**
+ * 地点列表卡片项。
+ */
 @Composable
 private fun PlaceItem(
     place: Place,

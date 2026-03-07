@@ -4,19 +4,30 @@ import android.util.Log
 import kotlinx.coroutines.CancellationException
 import retrofit2.Response
 
+/**
+ * 网络调用结果封装。
+ */
 open class ApiResult<out T> {
-    //网络请求成功
+
+    /**
+     * 请求成功并包含业务数据。
+     */
     data class Success<out T>(val data: T) : ApiResult<T>()
 
-    //网络请求失败
+    /**
+     * 请求失败但已收到响应。
+     */
     data class Failure(val code: Int, val msg: String) : ApiResult<Nothing>()
 
-    //网络请求异常
+    /**
+     * 请求过程发生异常。
+     */
     data class Error(val exception: Throwable) : ApiResult<Nothing>()
-
 }
 
-
+/**
+ * 统一处理 Retrofit 响应与异常，转换为 [ApiResult]。
+ */
 suspend fun <T> filterResponse(call: suspend () -> Response<T>): ApiResult<T> {
     try {
         val response = call()
@@ -41,6 +52,4 @@ suspend fun <T> filterResponse(call: suspend () -> Response<T>): ApiResult<T> {
         Log.e("SunnyWeather", msg)
         return ApiResult.Error(e)
     }
-
-
 }

@@ -1,15 +1,16 @@
 package com.example.sunnyweather
 
+import org.junit.Assert.assertEquals
 import org.junit.Test
 
-import org.junit.Assert.*
-
 /**
- * Example local unit test, which will execute on the development machine (host).
- *
- * See [testing documentation](http://d.android.com/tools/testing).
+ * 本地 JVM 单元测试示例。
  */
 class ExampleUnitTest {
+
+    /**
+     * 验证基础加法结果。
+     */
     @Test
     fun addition_isCorrect() {
         assertEquals(4, 2 + 2)

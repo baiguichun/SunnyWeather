@@ -17,23 +17,58 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+/**
+ * 天气页面状态。
+ */
 data class WeatherUiState(
     val placeName: String = "",
     val weather: Weather? = null,
     val isRefreshing: Boolean = false
 )
 
+/**
+ * 天气页面 ViewModel，负责天气加载与地点切换。
+ */
 class WeatherViewModel : ViewModel() {
+
+    /**
+     * 当前经度。
+     */
     private var locationLng = ""
+
+    /**
+     * 当前纬度。
+     */
     private var locationLat = ""
+
+    /**
+     * 刷新请求序号，用于忽略过期响应。
+     */
     private var refreshRequestId = 0L
 
+    /**
+     * 内部可变 UI 状态。
+     */
     private val _uiState = MutableStateFlow(WeatherUiState())
+
+    /**
+     * 对外只读 UI 状态。
+     */
     val uiState: StateFlow<WeatherUiState> = _uiState.asStateFlow()
 
+    /**
+     * 一次性提示事件流。
+     */
     private val _events = MutableSharedFlow<String>(extraBufferCapacity = 1)
+
+    /**
+     * 对外只读事件流。
+     */
     val events: SharedFlow<String> = _events.asSharedFlow()
 
+    /**
+     * 用首次传参初始化 ViewModel。
+     */
     fun initialize(lng: String, lat: String, placeName: String) {
         if (locationLng.isEmpty()) {
             locationLng = lng
@@ -46,6 +81,9 @@ class WeatherViewModel : ViewModel() {
         }
     }
 
+    /**
+     * 刷新天气：并行请求实时与未来天气并合并为展示模型。
+     */
     fun refreshWeather() {
         if (locationLng.isBlank() || locationLat.isBlank()) {
             _events.tryEmit("无法成功获取天气信息")
@@ -88,6 +126,9 @@ class WeatherViewModel : ViewModel() {
         }
     }
 
+    /**
+     * 应用新地点并更新标题。
+     */
     fun applyPlace(place: Place) {
         locationLng = place.location.lng
         locationLat = place.location.lat

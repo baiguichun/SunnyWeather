@@ -16,22 +16,48 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+/**
+ * 地点搜索页面状态。
+ */
 data class PlaceUiState(
     val query: String = "",
     val places: List<Place> = emptyList(),
     val showBackground: Boolean = true
 )
 
+/**
+ * 地点搜索页 ViewModel，管理查询状态与一次性事件。
+ */
 class PlaceViewModel : ViewModel() {
 
+    /**
+     * 页面持续状态。
+     */
     private val _uiState = MutableStateFlow(PlaceUiState())
+
+    /**
+     * 对外只读页面状态。
+     */
     val uiState: StateFlow<PlaceUiState> = _uiState.asStateFlow()
 
+    /**
+     * 一次性提示事件（如 Toast 文案）。
+     */
     private val _events = MutableSharedFlow<String>(extraBufferCapacity = 1)
+
+    /**
+     * 对外只读事件流。
+     */
     val events: SharedFlow<String> = _events.asSharedFlow()
 
+    /**
+     * 当前搜索请求序号，用于丢弃过期结果。
+     */
     private var searchRequestId = 0L
 
+    /**
+     * 响应查询词变化；为空时清空结果，非空时触发搜索。
+     */
     fun onQueryChanged(query: String) {
         _uiState.update { it.copy(query = query) }
         if (query.isBlank()) {
@@ -41,6 +67,9 @@ class PlaceViewModel : ViewModel() {
         searchPlaces(query)
     }
 
+    /**
+     * 执行地点搜索并更新页面状态。
+     */
     private fun searchPlaces(query: String) {
         val requestId = ++searchRequestId
         viewModelScope.launch {
@@ -75,8 +104,23 @@ class PlaceViewModel : ViewModel() {
         }
     }
 
+    /**
+     * 缓存用户选择的地点。
+     */
     fun savePlace(place: Place) = Repository.savePlace(place)
+
+    /**
+     * 清理本地缓存地点。
+     */
     fun clearSavedPlace() = Repository.clearSavedPlace()
+
+    /**
+     * 获取本地缓存地点。
+     */
     fun getSavedPlace() = Repository.getSavedPlace()
+
+    /**
+     * 判断是否存在本地缓存地点。
+     */
     fun isPlaceSaved() = Repository.isPlaceSaved()
 }

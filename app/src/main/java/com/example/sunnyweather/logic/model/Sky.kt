@@ -2,9 +2,18 @@ package com.example.sunnyweather.logic.model
 
 import com.example.sunnyweather.R
 
+/**
+ * 天气描述与资源映射模型。
+ */
+class Sky(
+    val info: String,
+    val icon: Int,
+    val bg: Int
+)
 
-class Sky(val info: String, val icon: Int, val bg: Int)
-
+/**
+ * 天气代码到 UI 展示资源的映射表。
+ */
 private val sky = mapOf(
     "CLEAR_DAY" to Sky("晴", R.drawable.ic_clear_day, R.drawable.bg_clear_day),
     "CLEAR_NIGHT" to Sky("晴", R.drawable.ic_clear_night, R.drawable.bg_clear_night),
@@ -38,6 +47,9 @@ private val sky = mapOf(
     "DUST" to Sky("浮尘", R.drawable.ic_fog, R.drawable.bg_fog)
 )
 
+/**
+ * 根据天气代码获取展示资源，未知代码回退到晴天。
+ */
 fun getSky(skycon: String): Sky {
     return sky[skycon] ?: sky["CLEAR_DAY"]!!
 }
