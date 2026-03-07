@@ -6,6 +6,7 @@ import com.example.sunnyweather.logic.Repository
 import com.example.sunnyweather.logic.model.Place
 import com.example.sunnyweather.logic.network.ApiResult
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -56,11 +57,17 @@ class PlaceViewModel : ViewModel() {
     private var searchRequestId = 0L
 
     /**
+     * 当前搜索任务，用于在输入变更时取消旧请求。
+     */
+    private var searchJob: Job? = null
+
+    /**
      * 响应查询词变化；为空时清空结果，非空时触发搜索。
      */
     fun onQueryChanged(query: String) {
         _uiState.update { it.copy(query = query) }
         if (query.isBlank()) {
+            searchJob?.cancel()
             _uiState.update { it.copy(places = emptyList(), showBackground = true) }
             return
         }
@@ -72,7 +79,8 @@ class PlaceViewModel : ViewModel() {
      */
     private fun searchPlaces(query: String) {
         val requestId = ++searchRequestId
-        viewModelScope.launch {
+        searchJob?.cancel()
+        searchJob = viewModelScope.launch {
             val result = withContext(Dispatchers.IO) { Repository.searchPlaces(query) }
             if (requestId != searchRequestId || query != _uiState.value.query) {
                 return@launch
@@ -88,16 +96,30 @@ class PlaceViewModel : ViewModel() {
                                 )
                             }
                         } else {
+                            _uiState.update {
+                                it.copy(places = emptyList(), showBackground = true)
+                            }
                             _events.tryEmit("未能查询到任何地点")
                         }
+                    } else {
+                        _uiState.update {
+                            it.copy(places = emptyList(), showBackground = true)
+                        }
+                        _events.tryEmit("查询地点失败，请稍后重试")
                     }
                 }
 
                 is ApiResult.Failure -> {
+                    _uiState.update {
+                        it.copy(places = emptyList(), showBackground = true)
+                    }
                     _events.tryEmit(result.msg)
                 }
 
                 is ApiResult.Error -> {
+                    _uiState.update {
+                        it.copy(places = emptyList(), showBackground = true)
+                    }
                     _events.tryEmit(result.exception.message ?: "未知错误")
                 }
             }

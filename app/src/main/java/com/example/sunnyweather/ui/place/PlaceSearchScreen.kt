@@ -3,6 +3,7 @@ package com.example.sunnyweather.ui.place
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,14 +11,15 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.windowInsetsTopHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -28,8 +30,12 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.sunnyweather.R
 import com.example.sunnyweather.logic.model.Place
@@ -71,6 +77,7 @@ fun PlaceSearchScreen(
     places: List<Place>,
     showBackground: Boolean,
     modifier: Modifier = Modifier,
+    withStatusBarPadding: Boolean = false,
     onQueryChange: (String) -> Unit,
     onPlaceClick: (Place) -> Unit
 ) {
@@ -91,6 +98,14 @@ fun PlaceSearchScreen(
         }
 
         Column(modifier = Modifier.fillMaxSize()) {
+            if (withStatusBarPadding) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .windowInsetsTopHeight(WindowInsets.statusBars)
+                        .background(colorResource(id = R.color.colorPrimary))
+                )
+            }
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -98,23 +113,39 @@ fun PlaceSearchScreen(
                     .background(colorResource(id = R.color.colorPrimary)),
                 contentAlignment = Alignment.Center
             ) {
-                TextField(
-                    value = query,
-                    onValueChange = onQueryChange,
-                    singleLine = true,
-                    placeholder = { Text(text = "输入地址") },
+                val shape = RoundedCornerShape(4.dp)
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 10.dp),
-                    colors = TextFieldDefaults.colors(
-                        focusedContainerColor = Color.White,
-                        unfocusedContainerColor = Color.White,
-                        disabledContainerColor = Color.White,
-                        focusedIndicatorColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent,
-                        disabledIndicatorColor = Color.Transparent
+                        .padding(horizontal = 10.dp)
+                        .height(40.dp)
+                        .background(Color.White, shape)
+                        .border(0.5.dp, Color(0x22000000), shape),
+                    contentAlignment = Alignment.CenterStart
+                ) {
+                    BasicTextField(
+                        value = query,
+                        onValueChange = onQueryChange,
+                        singleLine = true,
+                        textStyle = TextStyle(
+                            color = Color.Black,
+                            fontSize = 16.sp
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 10.dp),
+                        decorationBox = { innerTextField ->
+                            if (query.isEmpty()) {
+                                Text(
+                                    text = "输入地址",
+                                    color = Color(0x88000000),
+                                    fontSize = 16.sp
+                                )
+                            }
+                            innerTextField()
+                        }
                     )
-                )
+                }
             }
 
             if (places.isNotEmpty()) {
@@ -145,7 +176,7 @@ private fun PlaceItem(
             .padding(horizontal = 12.dp, vertical = 8.dp)
             .height(130.dp)
             .clickable(onClick = onClick),
-        shape = MaterialTheme.shapes.small,
+        shape = RoundedCornerShape(4.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(
@@ -155,13 +186,13 @@ private fun PlaceItem(
         ) {
             Text(
                 text = place.name,
-                style = MaterialTheme.typography.titleMedium,
+                style = TextStyle(fontSize = 20.sp),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
             Text(
                 text = place.address,
-                style = MaterialTheme.typography.bodyMedium,
+                style = TextStyle(fontSize = 14.sp),
                 modifier = Modifier.padding(top = 10.dp),
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis

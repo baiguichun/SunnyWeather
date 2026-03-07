@@ -13,21 +13,21 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.DrawerValue
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -43,9 +43,11 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.sunnyweather.R
 import com.example.sunnyweather.logic.model.DailyResponse
@@ -58,9 +60,13 @@ import java.text.SimpleDateFormat
 import java.util.Locale
 
 /**
- * 天气页面路由层：绑定 ViewModel 状态、抽屉交互和下拉刷新。
+ * 天气页面路由层：绑定 ViewModel 状态、左右滑动交互和下拉刷新。
  */
-@OptIn(ExperimentalMaterialApi::class, ExperimentalComposeUiApi::class)
+@OptIn(
+    ExperimentalMaterialApi::class,
+    ExperimentalComposeUiApi::class,
+    ExperimentalFoundationApi::class
+)
 @Composable
 fun WeatherRoute(
     weatherViewModel: WeatherViewModel,
@@ -70,10 +76,13 @@ fun WeatherRoute(
     val placeState by placeViewModel.uiState.collectAsStateWithLifecycle()
 
     val context = LocalContext.current
-    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val coroutineScope = rememberCoroutineScope()
     val keyboardController = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
+    val pagerState = rememberPagerState(
+        initialPage = 1,
+        pageCount = { 2 }
+    )
 
     LaunchedEffect(weatherViewModel) {
         weatherViewModel.events.collect { message ->
@@ -87,8 +96,8 @@ fun WeatherRoute(
         }
     }
 
-    LaunchedEffect(drawerState.currentValue) {
-        if (drawerState.currentValue == DrawerValue.Closed) {
+    LaunchedEffect(pagerState.currentPage) {
+        if (pagerState.currentPage == 1) {
             keyboardController?.hide()
             focusManager.clearFocus(force = true)
         }
@@ -99,54 +108,56 @@ fun WeatherRoute(
         onRefresh = weatherViewModel::refreshWeather
     )
 
-    ModalNavigationDrawer(
-        drawerState = drawerState,
-        drawerContent = {
+    HorizontalPager(
+        state = pagerState,
+        modifier = Modifier.fillMaxSize()
+    ) { page ->
+        if (page == 1) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(top = 25.dp)
-                    .background(colorResource(id = R.color.colorPrimary))
+                    .pullRefresh(pullRefreshState)
             ) {
-                PlaceSearchScreen(
-                    query = placeState.query,
-                    places = placeState.places,
-                    showBackground = placeState.showBackground,
-                    modifier = Modifier.fillMaxSize(),
-                    onQueryChange = placeViewModel::onQueryChanged,
-                    onPlaceClick = { place ->
-                        placeViewModel.savePlace(place)
-                        weatherViewModel.applyPlace(place)
-                        coroutineScope.launch {
-                            drawerState.close()
-                        }
-                        weatherViewModel.refreshWeather()
-                    }
-                )
-            }
-        }
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .pullRefresh(pullRefreshState)
-        ) {
-            weatherState.weather?.let { weather ->
-                WeatherScreen(
-                    weather = weather,
-                    placeName = weatherState.placeName,
-                    onOpenDrawer = {
-                        coroutineScope.launch {
-                            drawerState.open()
-                        }
-                    }
-                )
-            }
+                weatherState.weather?.let { weather ->
+                    WeatherScreen(
+                        weather = weather,
+                        placeName = weatherState.placeName
+                    )
+                }
 
-            PullRefreshIndicator(
-                refreshing = weatherState.isRefreshing,
-                state = pullRefreshState,
-                modifier = Modifier.align(Alignment.TopCenter)
+                if (weatherState.weather == null && weatherState.isRefreshing) {
+                    CircularProgressIndicator(
+                        color = colorResource(id = R.color.colorPrimary),
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+                } else {
+                    PullRefreshIndicator(
+                        refreshing = weatherState.isRefreshing,
+                        state = pullRefreshState,
+                        contentColor = colorResource(id = R.color.colorPrimary),
+                        modifier = Modifier
+                            .align(Alignment.TopCenter)
+                            .statusBarsPadding()
+                            .padding(top = 8.dp)
+                    )
+                }
+            }
+        } else {
+            PlaceSearchScreen(
+                query = placeState.query,
+                places = placeState.places,
+                showBackground = placeState.showBackground,
+                modifier = Modifier.fillMaxSize(),
+                withStatusBarPadding = true,
+                onQueryChange = placeViewModel::onQueryChanged,
+                onPlaceClick = { place ->
+                    placeViewModel.savePlace(place)
+                    weatherViewModel.applyPlace(place)
+                    weatherViewModel.refreshWeather()
+                    coroutineScope.launch {
+                        pagerState.animateScrollToPage(1)
+                    }
+                }
             )
         }
     }
@@ -158,8 +169,7 @@ fun WeatherRoute(
 @Composable
 private fun WeatherScreen(
     weather: Weather,
-    placeName: String,
-    onOpenDrawer: () -> Unit
+    placeName: String
 ) {
     Column(
         modifier = Modifier
@@ -168,8 +178,7 @@ private fun WeatherScreen(
     ) {
         NowSection(
             weather = weather,
-            placeName = placeName,
-            onOpenDrawer = onOpenDrawer
+            placeName = placeName
         )
         ForecastSection(daily = weather.daily)
         LifeIndexSection(lifeIndex = weather.daily.lifeIndex)
@@ -182,8 +191,7 @@ private fun WeatherScreen(
 @Composable
 private fun NowSection(
     weather: Weather,
-    placeName: String,
-    onOpenDrawer: () -> Unit
+    placeName: String
 ) {
     val realtime = weather.realtime
     val sky = getSky(realtime.skycon)
@@ -207,29 +215,15 @@ private fun NowSection(
                     .statusBarsPadding()
                     .height(70.dp)
             ) {
-                IconButton(
-                    onClick = onOpenDrawer,
-                    modifier = Modifier
-                        .padding(start = 15.dp)
-                        .align(Alignment.CenterStart)
-                        .size(30.dp)
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_home),
-                        contentDescription = "open drawer",
-                        tint = Color.Unspecified,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                }
                 Text(
                     text = placeName,
                     color = Color.White,
-                    style = MaterialTheme.typography.titleLarge,
+                    style = TextStyle(fontSize = 20.sp),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier
                         .align(Alignment.Center)
-                        .padding(horizontal = 60.dp)
+                        .padding(horizontal = 16.dp)
                 )
             }
 
@@ -243,7 +237,7 @@ private fun NowSection(
                 Text(
                     text = "${realtime.temperature.toInt()} ℃",
                     color = Color.White,
-                    style = MaterialTheme.typography.displayLarge
+                    style = TextStyle(fontSize = 70.sp)
                 )
                 Row(
                     modifier = Modifier.padding(top = 20.dp),
@@ -252,18 +246,18 @@ private fun NowSection(
                     Text(
                         text = sky.info,
                         color = Color.White,
-                        style = MaterialTheme.typography.bodyLarge
+                        style = TextStyle(fontSize = 18.sp)
                     )
                     Text(
                         text = " | ",
                         color = Color.White,
-                        style = MaterialTheme.typography.bodyLarge,
+                        style = TextStyle(fontSize = 18.sp),
                         modifier = Modifier.padding(horizontal = 13.dp)
                     )
                     Text(
                         text = "空气指数 ${realtime.airQuality.aqi.chn.toInt()}",
                         color = Color.White,
-                        style = MaterialTheme.typography.bodyLarge
+                        style = TextStyle(fontSize = 18.sp)
                     )
                 }
             }
@@ -283,12 +277,12 @@ private fun ForecastSection(daily: DailyResponse.Daily) {
             .fillMaxWidth()
             .padding(start = 15.dp, end = 15.dp, top = 15.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        shape = MaterialTheme.shapes.small
+        shape = RoundedCornerShape(4.dp)
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
             Text(
                 text = "预报",
-                style = MaterialTheme.typography.titleMedium,
+                style = TextStyle(fontSize = 20.sp),
                 modifier = Modifier.padding(start = 15.dp, top = 20.dp, bottom = 20.dp)
             )
 
@@ -335,12 +329,12 @@ private fun LifeIndexSection(lifeIndex: DailyResponse.LifeIndex) {
             .fillMaxWidth()
             .padding(15.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        shape = MaterialTheme.shapes.small
+        shape = RoundedCornerShape(4.dp)
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
             Text(
                 text = "生活指数",
-                style = MaterialTheme.typography.titleMedium,
+                style = TextStyle(fontSize = 20.sp),
                 modifier = Modifier.padding(start = 15.dp, top = 20.dp)
             )
 
@@ -408,11 +402,11 @@ private fun LifeIndexItem(
         Column(modifier = Modifier.padding(start = 20.dp)) {
             Text(
                 text = title,
-                style = MaterialTheme.typography.bodySmall
+                style = TextStyle(fontSize = 12.sp)
             )
             Text(
                 text = desc,
-                style = MaterialTheme.typography.bodyLarge,
+                style = TextStyle(fontSize = 16.sp),
                 modifier = Modifier.padding(top = 4.dp)
             )
         }

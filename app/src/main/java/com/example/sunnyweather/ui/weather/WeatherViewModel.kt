@@ -7,7 +7,9 @@ import com.example.sunnyweather.logic.model.Place
 import com.example.sunnyweather.logic.model.Weather
 import com.example.sunnyweather.logic.network.ApiResult
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -16,6 +18,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 
 /**
  * 天气页面状态。
@@ -30,6 +33,9 @@ data class WeatherUiState(
  * 天气页面 ViewModel，负责天气加载与地点切换。
  */
 class WeatherViewModel : ViewModel() {
+    companion object {
+        private const val WEATHER_REQUEST_TIMEOUT_MS = 15_000L
+    }
 
     /**
      * 当前经度。
@@ -45,6 +51,11 @@ class WeatherViewModel : ViewModel() {
      * 刷新请求序号，用于忽略过期响应。
      */
     private var refreshRequestId = 0L
+
+    /**
+     * 当前刷新任务，用于在新刷新到来时取消旧请求。
+     */
+    private var refreshJob: Job? = null
 
     /**
      * 内部可变 UI 状态。
@@ -79,6 +90,9 @@ class WeatherViewModel : ViewModel() {
         if (_uiState.value.placeName.isEmpty()) {
             _uiState.update { it.copy(placeName = placeName) }
         }
+        Repository.getCachedWeather(locationLng, locationLat)?.let { cachedWeather ->
+            _uiState.update { it.copy(weather = cachedWeather) }
+        }
     }
 
     /**
@@ -89,38 +103,56 @@ class WeatherViewModel : ViewModel() {
             _events.tryEmit("无法成功获取天气信息")
             return
         }
+        refreshJob?.cancel()
         val requestId = ++refreshRequestId
-        viewModelScope.launch {
+        refreshJob = viewModelScope.launch {
+            var requestSuccess = false
+            var timeout = false
             _uiState.update { it.copy(isRefreshing = true) }
-            val featureWeatherResult = async(Dispatchers.IO) {
-                Repository.getDailyWeather(locationLng, locationLat)
+            try {
+                val resultPair = withTimeoutOrNull(WEATHER_REQUEST_TIMEOUT_MS) {
+                    coroutineScope {
+                        val featureWeatherResult = async(Dispatchers.IO) {
+                            Repository.getDailyWeather(locationLng, locationLat)
+                        }
+                        val currentWeatherResult = async(Dispatchers.IO) {
+                            Repository.getRealtimeWeather(locationLng, locationLat)
+                        }
+                        featureWeatherResult.await() to currentWeatherResult.await()
+                    }
+                }
+                if (requestId != refreshRequestId) {
+                    return@launch
+                }
+                if (resultPair == null) {
+                    timeout = true
+                } else {
+                    val (dailyWeather, realtimeWeather) = resultPair
+                    if (dailyWeather is ApiResult.Success
+                        && realtimeWeather is ApiResult.Success
+                    ) {
+                        if (dailyWeather.data.status == "ok" && realtimeWeather.data.status == "ok") {
+                            val weather = Weather(
+                                realtimeWeather.data.result.realtime,
+                                dailyWeather.data.result.daily
+                            )
+                            requestSuccess = true
+                            Repository.saveWeather(locationLng, locationLat, weather)
+                            _uiState.update { it.copy(weather = weather) }
+                        }
+                    }
+                }
+            } finally {
+                if (requestId == refreshRequestId) {
+                    _uiState.update { it.copy(isRefreshing = false) }
+                }
             }
-            val currentWeatherResult = async(Dispatchers.IO) {
-                Repository.getRealtimeWeather(locationLng, locationLat)
-            }
-            val dailyWeather = featureWeatherResult.await()
-            val realtimeWeather = currentWeatherResult.await()
             if (requestId != refreshRequestId) {
                 return@launch
             }
-            var requestSuccess = false
-
-            if (dailyWeather is ApiResult.Success
-                && realtimeWeather is ApiResult.Success
-            ) {
-                if (dailyWeather.data.status == "ok" && realtimeWeather.data.status == "ok") {
-                    val weather = Weather(
-                        realtimeWeather.data.result.realtime,
-                        dailyWeather.data.result.daily
-                    )
-                    requestSuccess = true
-                    _uiState.update { it.copy(weather = weather) }
-                }
-            }
-
-            _uiState.update { it.copy(isRefreshing = false) }
-
-            if (!requestSuccess) {
+            if (timeout) {
+                _events.tryEmit("获取天气超时，请重试")
+            } else if (!requestSuccess) {
                 _events.tryEmit("无法成功获取天气信息")
             }
         }
@@ -132,6 +164,12 @@ class WeatherViewModel : ViewModel() {
     fun applyPlace(place: Place) {
         locationLng = place.location.lng
         locationLat = place.location.lat
-        _uiState.update { it.copy(placeName = place.name) }
+        val cachedWeather = Repository.getCachedWeather(locationLng, locationLat)
+        _uiState.update {
+            it.copy(
+                placeName = place.name,
+                weather = cachedWeather
+            )
+        }
     }
 }

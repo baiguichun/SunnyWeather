@@ -1,7 +1,9 @@
 package com.example.sunnyweather.logic
 
 import com.example.sunnyweather.logic.dao.PlaceDao
+import com.example.sunnyweather.logic.dao.WeatherDao
 import com.example.sunnyweather.logic.model.Place
+import com.example.sunnyweather.logic.model.Weather
 import com.example.sunnyweather.logic.network.SunnyWeatherNetwork
 import com.example.sunnyweather.logic.network.filterResponse
 
@@ -47,4 +49,16 @@ object Repository {
      * 判断本地是否有缓存地点。
      */
     fun isPlaceSaved() = PlaceDao.isPlaceSaved()
+
+    /**
+     * 保存某经纬度对应的天气缓存。
+     */
+    fun saveWeather(lng: String, lat: String, weather: Weather) =
+        WeatherDao.saveWeather(lng, lat, weather)
+
+    /**
+     * 获取某经纬度对应的天气缓存。
+     */
+    fun getCachedWeather(lng: String, lat: String) =
+        WeatherDao.getWeather(lng, lat)
 }
