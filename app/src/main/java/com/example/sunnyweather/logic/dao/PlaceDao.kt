@@ -1,7 +1,6 @@
 package com.example.sunnyweather.logic.dao
 
 import android.content.Context
-import android.util.Log
 import androidx.core.content.edit
 import com.example.sunnyweather.SunnyWeatherApplication
 import com.example.sunnyweather.logic.model.Place
@@ -20,10 +19,17 @@ object PlaceDao {
         }
     }
 
-    fun getSavedPlace(): Place {
-        val placeJson = sharedPreferences().getString("place", "")
-        val place = Gson().fromJson(placeJson, Place::class.java)
-        return place
+    fun clearSavedPlace() {
+        sharedPreferences().edit {
+            remove("place")
+        }
+    }
+
+    fun getSavedPlace(): Place? {
+        val placeJson = sharedPreferences().getString("place", null) ?: return null
+        return runCatching {
+            Gson().fromJson(placeJson, Place::class.java)
+        }.getOrNull()
     }
 
     fun isPlaceSaved() = sharedPreferences().contains("place")

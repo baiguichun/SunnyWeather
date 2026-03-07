@@ -1,6 +1,7 @@
 package com.example.sunnyweather.logic.network
 
 import android.util.Log
+import kotlinx.coroutines.CancellationException
 import retrofit2.Response
 
 open class ApiResult<out T> {
@@ -33,6 +34,8 @@ suspend fun <T> filterResponse(call: suspend () -> Response<T>): ApiResult<T> {
             Log.i("SunnyWeather", msg)
             ApiResult.Failure(response.code(), response.message())
         }
+    } catch (e: CancellationException) {
+        throw e
     } catch (e: Exception) {
         val msg = "网络异常，msg：${e.message}"
         Log.e("SunnyWeather", msg)

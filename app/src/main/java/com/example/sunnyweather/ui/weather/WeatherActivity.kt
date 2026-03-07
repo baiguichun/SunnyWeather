@@ -3,30 +3,20 @@ package com.example.sunnyweather.ui.weather
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.view.View
-import android.view.inputmethod.InputMethodManager
-import android.widget.ImageView
-import android.widget.TextView
-import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.GravityCompat
-import androidx.drawerlayout.widget.DrawerLayout
-import androidx.lifecycle.ViewModelProvider
-import com.example.sunnyweather.R
-import com.example.sunnyweather.databinding.ActivityWeatherBinding
-import com.example.sunnyweather.logic.model.Place
-import com.example.sunnyweather.logic.model.Weather
-import com.example.sunnyweather.logic.model.getSky
-import com.gyf.immersionbar.ImmersionBar
-import java.text.SimpleDateFormat
-import java.util.Locale
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.viewModels
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsControllerCompat
+import com.example.sunnyweather.ui.place.PlaceViewModel
 
-class WeatherActivity : AppCompatActivity() {
+class WeatherActivity : ComponentActivity() {
 
     companion object {
         const val LOCATION_LNG = "location_lng"
         const val LOCATION_LAT = "location_lat"
         const val PLACE_NAME = "place_name"
+
         fun start(context: Context, lng: String, lat: String, placeName: String) {
             val intent = Intent(context, WeatherActivity::class.java)
             intent.putExtra(LOCATION_LNG, lng)
@@ -36,147 +26,31 @@ class WeatherActivity : AppCompatActivity() {
         }
     }
 
-    private val viewModel by lazy { ViewModelProvider(this)[WeatherViewModel::class.java] }
-    private var longitude: String? = null
-    private var latitude: String? = null
-    private var placeName: String? = null
+    private val weatherViewModel: WeatherViewModel by viewModels()
+    private val placeViewModel: PlaceViewModel by viewModels()
 
-    private lateinit var binding: ActivityWeatherBinding
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityWeatherBinding.inflate(layoutInflater)
-        setContentView(binding.root)
-        longitude = intent.getStringExtra(LOCATION_LNG)
-        latitude = intent.getStringExtra(LOCATION_LAT)
-        placeName = intent.getStringExtra(PLACE_NAME)
 
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightStatusBars = true
 
-        if (viewModel.locationLng.isEmpty()) {
-            viewModel.locationLng = longitude ?: ""
-        }
-        if (viewModel.locationLat.isEmpty()) {
-            viewModel.locationLat = latitude ?: ""
-        }
+        val longitude = intent.getStringExtra(LOCATION_LNG).orEmpty()
+        val latitude = intent.getStringExtra(LOCATION_LAT).orEmpty()
+        val placeName = intent.getStringExtra(PLACE_NAME).orEmpty()
 
-        if (viewModel.placeName.isEmpty()) {
-            viewModel.placeName = placeName ?: ""
-        }
-        initView()
-        onClick()
-        refreshWeather()
-        registerObserver()
-    }
+        weatherViewModel.initialize(
+            lng = longitude,
+            lat = latitude,
+            placeName = placeName
+        )
+        weatherViewModel.refreshWeather()
 
-    private fun initView() {
-        binding.swipeRefresh.setColorSchemeResources(R.color.colorPrimary)
-
-        ImmersionBar.with(this)
-            .transparentStatusBar()
-            .fitsSystemWindows(false)
-            .statusBarDarkFont(true)
-            .navigationBarColor(R.color.white)
-            .init()
-    }
-
-    fun refreshWeather() {
-        viewModel.refreshWeather(viewModel.locationLng, viewModel.locationLat)
-        binding.swipeRefresh.isRefreshing = true
-    }
-
-    private fun onClick() {
-        binding.swipeRefresh.setOnRefreshListener {
-            refreshWeather()
-        }
-
-        binding.nowInclude.navBtn.setOnClickListener {
-            binding.drawerLayout.openDrawer(GravityCompat.START)
-        }
-
-        binding.drawerLayout.addDrawerListener(object : DrawerLayout.DrawerListener {
-            override fun onDrawerSlide(drawerView: View, slideOffset: Float) {
-            }
-
-            override fun onDrawerOpened(drawerView: View) {
-            }
-
-            override fun onDrawerStateChanged(newState: Int) {
-            }
-
-            override fun onDrawerClosed(drawerView: View) {
-                val manager = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-                manager.hideSoftInputFromWindow(
-                    drawerView.windowToken,
-                    InputMethodManager.HIDE_NOT_ALWAYS
-                )
-            }
-        })
-
-    }
-
-    private fun registerObserver() {
-        viewModel.weatherInfo.observe(this) { weather ->
-            if (weather != null) {
-                showWeatherInfo(weather)
-            } else {
-                Toast.makeText(this, "无法成功获取天气信息", Toast.LENGTH_SHORT).show()
-            }
-            binding.swipeRefresh.isRefreshing = false
+        setContent {
+            WeatherRoute(
+                weatherViewModel = weatherViewModel,
+                placeViewModel = placeViewModel
+            )
         }
     }
-
-    private fun showWeatherInfo(weather: Weather) {
-        binding.nowInclude.placeName.text = viewModel.placeName
-        val realtime = weather.realtime
-        val daily = weather.daily
-        //填充now.xml布局中的数据
-        val currentTempText = "${realtime.temperature.toInt()} ℃"
-        binding.nowInclude.currentTemp.text = currentTempText
-        binding.nowInclude.currentSky.text = getSky(realtime.skycon).info
-        val currentPM25Text = "空气指数 ${realtime.airQuality.aqi.chn.toInt()}"
-        binding.nowInclude.currentAQI.text = currentPM25Text
-        binding.nowInclude.nowLayout.setBackgroundResource(getSky(realtime.skycon).bg)
-        // 填充forecast.xml布局中的数据
-        binding.forecastInclude.forecastLayout.removeAllViews()
-        val days = daily.skycon.size
-        for (i in 0 until days) {
-            val skycon = daily.skycon[i]
-            val temperature = daily.temperature[i]
-            val view =
-                layoutInflater.inflate(
-                    R.layout.forecast_item,
-                    binding.forecastInclude.forecastLayout,
-                    false
-                )
-            val dateInfo = view.findViewById<TextView>(R.id.dateInfo)
-            val skyIcon = view.findViewById<ImageView>(R.id.skyIcon)
-            val skyInfo = view.findViewById<TextView>(R.id.skyInfo)
-            val temperatureInfo = view.findViewById<TextView>(R.id.temperatureInfo)
-            val simpleDateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-            dateInfo.text = simpleDateFormat.format(skycon.date)
-            val sky = getSky(skycon.value)
-            skyIcon.setImageResource(sky.icon)
-            skyInfo.text = sky.info
-            val tempText = "${temperature.min.toInt()} ~ ${temperature.max.toInt()} ℃"
-            temperatureInfo.text = tempText
-            binding.forecastInclude.forecastLayout.addView(view)
-        }
-        // 填充life_index.xml布局中的数据
-        val lifeIndex = daily.lifeIndex
-        binding.lifeIndexInclude.coldRiskText.text = lifeIndex.coldRisk[0].desc
-        binding.lifeIndexInclude.dressingText.text = lifeIndex.dressing[0].desc
-        binding.lifeIndexInclude.ultravioletText.text = lifeIndex.ultraviolet[0].desc
-        binding.lifeIndexInclude.carWashingText.text = lifeIndex.carWashing[0].desc
-        binding.weatherLayout.visibility = View.VISIBLE
-    }
-
-    fun closeDrawers() {
-        binding.drawerLayout.closeDrawers()
-    }
-
-    fun setPlace(place: Place) {
-        viewModel.locationLng = place.location.lng
-        viewModel.locationLat = place.location.lat
-        viewModel.placeName = place.name
-    }
-
 }

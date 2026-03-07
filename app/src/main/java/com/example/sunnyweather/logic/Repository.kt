@@ -16,6 +16,7 @@ object Repository {
         filterResponse { SunnyWeatherNetwork.getRealtimeWeather(lng, lat) }
 
     fun savePlace(place: Place) = PlaceDao.savePlace(place)
+    fun clearSavedPlace() = PlaceDao.clearSavedPlace()
     fun getSavedPlace() = PlaceDao.getSavedPlace()
     fun isPlaceSaved() = PlaceDao.isPlaceSaved()
 }
