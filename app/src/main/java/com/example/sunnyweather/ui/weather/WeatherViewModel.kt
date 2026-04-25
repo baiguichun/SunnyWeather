@@ -99,7 +99,9 @@ class WeatherViewModel : ViewModel() {
      * 刷新天气：并行请求实时与未来天气并合并为展示模型。
      */
     fun refreshWeather() {
-        if (locationLng.isBlank() || locationLat.isBlank()) {
+        val lng = locationLng
+        val lat = locationLat
+        if (lng.isBlank() || lat.isBlank()) {
             _events.tryEmit("无法成功获取天气信息")
             return
         }
@@ -113,10 +115,10 @@ class WeatherViewModel : ViewModel() {
                 val resultPair = withTimeoutOrNull(WEATHER_REQUEST_TIMEOUT_MS) {
                     coroutineScope {
                         val featureWeatherResult = async(Dispatchers.IO) {
-                            Repository.getDailyWeather(locationLng, locationLat)
+                            Repository.getDailyWeather(lng, lat)
                         }
                         val currentWeatherResult = async(Dispatchers.IO) {
-                            Repository.getRealtimeWeather(locationLng, locationLat)
+                            Repository.getRealtimeWeather(lng, lat)
                         }
                         featureWeatherResult.await() to currentWeatherResult.await()
                     }
@@ -137,7 +139,7 @@ class WeatherViewModel : ViewModel() {
                                 dailyWeather.data.result.daily
                             )
                             requestSuccess = true
-                            Repository.saveWeather(locationLng, locationLat, weather)
+                            Repository.saveWeather(lng, lat, weather)
                             _uiState.update { it.copy(weather = weather) }
                         }
                     }

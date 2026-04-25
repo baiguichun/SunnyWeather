@@ -42,9 +42,16 @@ object PlaceDao {
      */
     fun getSavedPlace(): Place? {
         val placeJson = sharedPreferences().getString("place", null) ?: return null
+        if (!CacheValidator.isValidPlace(placeJson)) {
+            clearSavedPlace()
+            return null
+        }
         return runCatching {
             Gson().fromJson(placeJson, Place::class.java)
-        }.getOrNull()
+        }.getOrNull() ?: run {
+            clearSavedPlace()
+            null
+        }
     }
 
     /**

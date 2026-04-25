@@ -43,9 +43,22 @@ object WeatherDao {
      */
     fun getWeather(lng: String, lat: String): Weather? {
         val weatherJson = sharedPreferences().getString("weather", null) ?: return null
+        if (!CacheValidator.isValidWeather(weatherJson, lng, lat)) {
+            clearWeather()
+            return null
+        }
         val cached = runCatching {
             Gson().fromJson(weatherJson, CachedWeather::class.java)
-        }.getOrNull() ?: return null
+        }.getOrNull() ?: run {
+            clearWeather()
+            return null
+        }
         return if (cached.lng == lng && cached.lat == lat) cached.weather else null
+    }
+
+    private fun clearWeather() {
+        sharedPreferences().edit {
+            remove("weather")
+        }
     }
 }
